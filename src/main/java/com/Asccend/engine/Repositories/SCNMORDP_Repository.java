@@ -16,4 +16,7 @@ public interface SCNMORDP_Repository extends JpaRepository<SCNMORDP, Long> {
     @Query("Select s from SCNMORDP s where s.cardNumber = :cardNumber and s.plan IN :plan")
     List<SCNMORDP> findByCardNumberNew(@Param("cardNumber") String cardNumber, @Param("plan") List<String> planCode);
 
+    @Query("Select s from SCNMORDP s where s.cardNumber = :cardNumber and s.plan IN :plan and s.authCode = :authCode")
+    List<SCNMORDP> findByCardNumberNew2(@Param("cardNumber") String cardNumber, @Param("plan") List<String> planCode, @Param("authCode") String authCode);
+
 }

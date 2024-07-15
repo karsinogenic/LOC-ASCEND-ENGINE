@@ -18,10 +18,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.Asccend.engine.Models.CARDP_ACCP_CUSTP;
@@ -48,6 +51,8 @@ import jakarta.persistence.Query;
 import jakarta.persistence.TypedQuery;
 
 import org.springframework.web.bind.annotation.RequestParam;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api")
@@ -77,8 +82,20 @@ public class APIMainController {
     @Autowired
     private EntityManager entityManager;
 
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map> handleMissingParams(MethodArgumentNotValidException ex) {
+        Map hasil = new HashMap<>();
+        String errorMessage = ex.getAllErrors().get(0).getDefaultMessage();
+        // String key = ex.getAllErrors().get(0);
+
+        hasil.put("RC", "EX-00");
+        hasil.put("RD", errorMessage);
+        return new ResponseEntity<Map>(hasil, null, 200);
+    }
+
     @PostMapping("/SCNMORDP")
-    public ResponseEntity scnmordp(@RequestBody SCNMORDP_ReqBody reqBody) {
+    public ResponseEntity scnmordp(@RequestBody @Valid SCNMORDP_ReqBody reqBody) {
         // System.out.println("masook");
         Map respsonse = new HashMap<>();
         if (reqBody.getCardnum() == null) {
@@ -95,7 +112,14 @@ public class APIMainController {
         // String[] plancode = { "C060", "LCT2" };
         List<SCNMORDP> list = new ArrayList<SCNMORDP>();
         try {
-            list = this.scnmordp_Repository.findByCardNumberNew(reqBody.getCardnum(), plancode);
+            if (reqBody.getAuthcode() != null) {
+                // System.out.println("1");
+                list = this.scnmordp_Repository.findByCardNumberNew2(reqBody.getCardnum(), plancode,
+                        reqBody.getAuthcode());
+            } else {
+                // System.out.println("2");
+                list = this.scnmordp_Repository.findByCardNumberNew(reqBody.getCardnum(), plancode);
+            }
 
         } catch (Exception e) {
             System.out.println(e.getMessage());
